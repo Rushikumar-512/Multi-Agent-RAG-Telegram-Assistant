@@ -1,0 +1,668 @@
+{
+  "name": "Multi-Agent RAG Telegram Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        688,
+        96
+      ],
+      "id": "5ee59166-8963-4b94-a6a9-8c8391b6196c",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "e0apRFz7BHlhIXd5",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "research",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "90194d4f-5fca-46ff-9a2f-4c506a8b96ec"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "research"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "28d4eff9-83d9-4ecf-9517-bc52f4f5fb55",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "rag",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rag"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0766dd97-6629-456e-bfec-dedbcea7f271",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "general",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "general"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "65d38a06-da59-4eb0-8e62-3ebfcaabd727",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "automation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "automation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        656
+      ],
+      "id": "68ceceb9-a243-4236-93d0-86eae6d6bcc8",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').first().json.message.text }}",
+        "options": {
+          "systemMessage": "You are a Research Agent responsible for answering questions that require current, accurate, and up-to-date information.\n\nYour responsibilities:\n\n* Understand the user's research question.\n* Use the available web search tools whenever current or external information is required.\n* Search for relevant and trustworthy information.\n* Analyze the information returned by the tools.\n* Combine information from multiple sources when necessary.\n* Do not rely only on your internal knowledge for time-sensitive questions.\n* Never invent search results, facts, sources, or URLs.\n* If the available tools cannot find enough information, clearly state that.\n* Provide a clear, accurate, and well-structured final answer.\n* Include sources when source information is available.\n\nAnswer only the user's original question. Do not discuss routing or other agents.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        688,
+        -128
+      ],
+      "id": "621e58b5-234d-4a55-aea9-59fee5ac89b9",
+      "name": "Research agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').first().json.message.text }}",
+        "options": {
+          "systemMessage": "You are a RAG Agent responsible for answering questions using information retrieved from the connected knowledge base or vector database.\n\nYour responsibilities:\n\n* Understand the user's question.\n* Search the connected vector store or knowledge base for relevant information.\n* Use the retrieved context as the primary source for your answer.\n* Do not invent information that is not supported by the retrieved context.\n* If the retrieved information is incomplete, clearly state that the knowledge base does not contain enough information.\n* Combine multiple relevant retrieved chunks when necessary.\n* Ignore irrelevant retrieved information.\n* Provide a clear, accurate, and concise answer based on the available knowledge.\n\nDo not answer from unsupported assumptions.\n\nAnswer only the user's original question. Do not discuss routing, embeddings, vector databases, or other agents unless the user specifically asks about them.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        688,
+        272
+      ],
+      "id": "b29be23b-4cd0-42e0-ac7a-d0a737d4e4f7",
+      "name": "Rag agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').first().json.message.text }}",
+        "options": {
+          "systemMessage": "You are a General AI Assistant responsible for handling normal conversations and questions that do not require current web research or information from the knowledge base.\n\nYour responsibilities:\n\n* Understand the user's question or request.\n* Provide clear, accurate, and helpful answers.\n* Explain complex topics in simple language when appropriate.\n* Help with coding, brainstorming, writing, learning, reasoning, and general questions.\n* Structure answers clearly.\n* Ask for clarification only when the user's request cannot reasonably be understood.\n* Do not claim to have searched the web or accessed stored documents.\n* Do not invent current information when up-to-date information is required.\n\nAnswer only the user's original question. Do not discuss routing or other agents.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        656,
+        1008
+      ],
+      "id": "53fe1342-d196-48d0-8f8b-2935f5240718",
+      "name": "general agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').first().json.message.text }}",
+        "options": {
+          "systemMessage": "You are an AI Automation Agent responsible for helping users design, understand, troubleshoot, and improve automation workflows.\n\nYour responsibilities:\n\n* Understand the user's automation goal.\n* Analyze the required workflow and identify the necessary triggers, actions, tools, APIs, conditions, and data transformations.\n* Provide clear step-by-step guidance.\n* Design efficient and reliable automation architectures.\n* Help troubleshoot workflow errors using the information provided by the user.\n* Recommend error handling, retries, logging, validation, and fallback mechanisms when appropriate.\n* Prefer simple and maintainable workflow designs over unnecessary complexity.\n* Clearly explain how data moves between workflow steps.\n* When designing workflows, describe the correct node order and the purpose of each node.\n* Never claim that an integration, API, node, or tool exists unless you have reliable information about it.\n* If important information is missing, clearly state what is needed.\n\nAnswer only the user's original automation question. Do not discuss routing or other agents unless the user specifically asks about them.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        656,
+        1280
+      ],
+      "id": "8f0b560a-2f16-497e-b633-c082f76abbaf",
+      "name": "automation agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "use this tool for web research ",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{$fromAI('query', 'The web search query based on the user request')}}\",\n  \"search_depth\": \"advanced\",\n  \"max_results\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        816,
+        96
+      ],
+      "id": "4a565f0f-0f63-4628-b7f3-fa6c743110e6",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the AI Automation knowledge base for information relevant to the user's question. Use this tool whenever the user asks about information contained in the stored documents. Retrieve the most relevant document chunks from the vector database and use them as context to answer the question accurately. Do not invent information that is not supported by the retrieved documents.",
+        "tableName": {
+          "__rl": true,
+          "value": "ai_automation",
+          "mode": "list",
+          "cachedResultName": "ai_automation"
+        },
+        "options": {
+          "queryName": "match_ai_automation"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        528
+      ],
+      "id": "65f551f5-d6b6-49e3-9c54-25c141cdb99e",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "hHHwqhiRI2ysdhC7",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        720
+      ],
+      "id": "4740b8af-667f-4679-aa7f-e3331805d896",
+      "name": "Send a text message",
+      "webhookId": "c568302d-b9d0-4a39-8a82-c00c007d110b",
+      "credentials": {
+        "telegramApi": {
+          "id": "2U59a9PV8YgG9rMY",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        688
+      ],
+      "id": "477bb18c-b9bf-432a-8198-637c0abdab50",
+      "name": "Telegram Trigger",
+      "webhookId": "84c4c1a5-8634-4502-b545-734322b020e5",
+      "credentials": {
+        "telegramApi": {
+          "id": "2U59a9PV8YgG9rMY",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a Supervisor Agent responsible for analyzing user requests and routing them to the correct specialized AI agent.\n\nClassify every user message into exactly one of these routes:\n\nresearch:\nUse when the user asks for current information, latest news, recent events, live information, web searches, current comparisons, or information requiring internet research.\n\nrag:\nUse when the user's question is related to the stored AI Automation Knowledge Base.\n\nThe knowledge base contains information about:\n- AI automation\n- n8n workflow architecture\n- Large Language Models and OpenRouter\n- AI agents\n- Supervisor and routing agents\n- Research agents and web search\n- Retrieval-Augmented Generation (RAG)\n- Document ingestion pipelines\n- Text splitting and chunking\n- Embeddings\n- Vector databases\n- RAG retrieval and answer generation\n- Memory in AI systems\n- Reliability and error handling\n- Model fallbacks\n- Multi-agent RAG architecture\n\nIf the user's question is related to any of these stored knowledge topics, route to rag.\n\ngeneral:\nUse for normal conversations, explanations, coding questions, brainstorming, writing, and questions unrelated to the stored AI Automation Knowledge Base.\n\nautomation:\nUse when the user asks to create, modify, design, explain, or troubleshoot an automation workflow.\n\nRouting priority:\n\n1. If current or latest information is required → research\n2. If the question relates to automation workflow creation or troubleshooting → automation\n3. If the question relates to information available in the stored AI Automation Knowledge Base → rag\n4. Otherwise → general\n\nReturn only one of these exact words:\n\nresearch\nrag\ngeneral\nautomation\n\nDo not answer the user's question.\nDo not provide explanations.\nReturn only the route name."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        96,
+        688
+      ],
+      "id": "1081f9a2-be80-4c16-89d7-2d51236e71ca",
+      "name": "supervisor Agent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        1120
+      ],
+      "id": "c5e97cc0-757b-4a5f-8a0e-17dc29025f8a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "12IfyN-PiSD3Ren1etQbP6ZhLEL9ZUcjz",
+          "mode": "list",
+          "cachedResultName": "ai automation.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/12IfyN-PiSD3Ren1etQbP6ZhLEL9ZUcjz/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1488,
+        1120
+      ],
+      "id": "8a571823-c3e2-45ba-bf96-75e6340aaf51",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "tp3If4oDL5BvjkyG",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1824,
+        1360
+      ],
+      "id": "09140125-b678-40ff-8d80-f2fa908beb98",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "ai_automation",
+          "mode": "list",
+          "cachedResultName": "ai_automation"
+        },
+        "options": {
+          "queryName": "match_ai_automation"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1664,
+        1120
+      ],
+      "id": "3a6f144a-5949-4047-92ae-9809c5ce8397",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "hHHwqhiRI2ysdhC7",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        1344
+      ],
+      "id": "4f35707b-43be-4d34-ba23-bfb490daa659",
+      "name": "Embeddings Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YYHKimf5W9FjkvjZ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        784,
+        816
+      ],
+      "id": "782f064a-b8be-431b-a182-b0f1a69714e2",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YYHKimf5W9FjkvjZ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "supervisor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Research agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Rag agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "general agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "automation agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Research agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rag agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "general agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "automation agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "Rag agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "supervisor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rag agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "general agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "automation agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "supervisor Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "55205ea9-0031-4307-ba11-29d13d9a80d5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3dd650ace53a0232387514b4e0fe08971e0cf9be78d23c677735afd1b7d830fd"
+  },
+  "nodeGroups": [],
+  "id": "GPcvVeLRdYmraweE",
+  "tags": []
+}
